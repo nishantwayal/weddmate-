@@ -1,0 +1,247 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Private user account record containing PII, consent flags, verification state, matchmaking preferences, and safety blocklist. Strictly isolated to owner.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "maxLength": 200 },
+        "phone": { "type": "string", "maxLength": 32 },
+        "phoneVerified": { "type": "boolean" },
+        "ageConfirmed18Plus": { "type": "boolean" },
+        "acceptedTerms": { "type": "boolean" },
+        "matchmakingPaused": { "type": "boolean" },
+        "profileVisibility": { "type": "string", "enum": ["wedding_only", "matches_only", "hidden"] },
+        "preferredAgeMin": { "type": "number" },
+        "preferredAgeMax": { "type": "number" },
+        "preferredLocations": { "type": "array" },
+        "partnerPreferences": { "type": "string", "maxLength": 500 },
+        "instagramId": { "type": "string", "maxLength": 64 },
+        "role": { "type": "string", "enum": ["guest", "planner"] },
+        "blockedUserIds": { "type": "array" },
+        "deletionRequested": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "ageConfirmed18Plus", "acceptedTerms", "role", "createdAt", "updatedAt"]
+    },
+    "GuestProfile": {
+      "title": "GuestProfile",
+      "description": "Public/community matchmaking profile without email or phone PII. Appears in Discover only when optedInDiscover is true and visibility is visible.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "fullName": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "age": { "type": "number" },
+        "gender": { "type": "string", "enum": ["Woman", "Man", "Non-binary"] },
+        "city": { "type": "string", "maxLength": 80 },
+        "profession": { "type": "string", "maxLength": 100 },
+        "education": { "type": "string", "maxLength": 100 },
+        "hobbies": { "type": "array" },
+        "intention": { "type": "string", "enum": ["Marriage", "Serious Relationship", "Getting to Know People", "Open to Connection"] },
+        "bio": { "type": "string", "maxLength": 500 },
+        "weddingSide": { "type": "string", "enum": ["Bride's Side", "Groom's Side", "Both Sides"] },
+        "languages": { "type": "array" },
+        "photos": { "type": "array" },
+        "primaryPhoto": { "type": "string", "maxLength": 450000 },
+        "weddingIds": { "type": "array" },
+        "optedInDiscover": { "type": "boolean" },
+        "visibility": { "type": "string", "enum": ["visible", "paused", "hidden"] },
+        "identityVerified": { "type": "boolean" },
+        "mutualConsentVisible": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "fullName", "age", "gender", "city", "optedInDiscover", "visibility", "createdAt", "updatedAt"]
+    },
+    "WeddingEvent": {
+      "title": "WeddingEvent",
+      "description": "Private wedding community with Heart QR token, duration, automatic expiry timestamp, and planner controls.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "plannerUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "weddingName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "brideName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "groomName": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "weddingDate": { "type": "string", "maxLength": 40 },
+        "venue": { "type": "string", "maxLength": 140 },
+        "durationPreset": { "type": "string", "enum": ["2_days", "3_days", "5_days", "custom"] },
+        "expiresAtMs": { "type": "number" },
+        "qrCodeToken": { "type": "string", "maxLength": 64, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "joinPermission": { "type": "string", "enum": ["open_qr", "approval_required", "invite_only"] },
+        "matchmakingEnabled": { "type": "boolean" },
+        "memoriesEnabled": { "type": "boolean" },
+        "memoriesUploadPermission": { "type": "string", "enum": ["all_guests", "organizer_only"] },
+        "status": { "type": "string", "enum": ["active", "expired"] },
+        "planTier": { "type": "string", "enum": ["Basic", "Premium", "Luxury"] },
+        "guestCount": { "type": "number" },
+        "optedInCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "plannerUid", "weddingName", "brideName", "groomName", "weddingDate", "venue", "durationPreset", "expiresAtMs", "qrCodeToken", "status", "createdAt", "updatedAt"]
+    },
+    "WeddingMember": {
+      "title": "WeddingMember",
+      "description": "Guest membership in a specific wedding community with explicit voluntary matchmaking opt-in.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "weddingId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "side": { "type": "string", "enum": ["Bride's Side", "Groom's Side"] },
+        "optedInMatchmaking": { "type": "boolean" },
+        "fullName": { "type": "string", "maxLength": 80 },
+        "city": { "type": "string", "maxLength": 80 },
+        "status": { "type": "string", "enum": ["active", "pending", "removed"] },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "weddingId", "side", "optedInMatchmaking", "status", "joinedAt"]
+    },
+    "SwipeAction": {
+      "title": "SwipeAction",
+      "description": "Directional swipe or secret crush record from one guest to another inside a wedding community.",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "toUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "weddingId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "action": { "type": "string", "enum": ["like", "pass", "secret_crush", "super_like"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUid", "toUid", "weddingId", "action", "createdAt"]
+    },
+    "MatchRecord": {
+      "title": "MatchRecord",
+      "description": "Mutual match between two opted-in guests in a wedding community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 280, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "user1Uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "user2Uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "participants": { "type": "array" },
+        "weddingId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "weddingName": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["active", "unmatched"] },
+        "icebreakerPrompt": { "type": "string", "maxLength": 240 },
+        "lastMessagePreview": { "type": "string", "maxLength": 200 },
+        "contactShareConsentUser1": { "type": "boolean" },
+        "contactShareConsentUser2": { "type": "boolean" },
+        "matchedAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "user1Uid", "user2Uid", "participants", "weddingId", "weddingName", "status", "matchedAt", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Private chat message between matched participants.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "matchId": { "type": "string", "maxLength": 280, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "senderUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "text": { "type": "string", "maxLength": 1200 },
+        "imageDataUrl": { "type": "string", "maxLength": 450000 },
+        "type": { "type": "string", "enum": ["text", "image", "icebreaker"] },
+        "readBy": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "matchId", "senderUid", "type", "createdAt"]
+    },
+    "WeddingMemory": {
+      "title": "WeddingMemory",
+      "description": "Wedding photo, vertical reel/video, or story post inside a wedding community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "weddingId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorName": { "type": "string", "maxLength": 80 },
+        "mediaType": { "type": "string", "enum": ["photo", "reel", "story"] },
+        "album": { "type": "string", "enum": ["Haldi", "Mehendi", "Sangeet", "Reception"] },
+        "mediaUrl": { "type": "string", "maxLength": 600000 },
+        "caption": { "type": "string", "maxLength": 300 },
+        "allowDownload": { "type": "boolean" },
+        "featuredOnLiveWall": { "type": "boolean" },
+        "likesCount": { "type": "number" },
+        "likedBy": { "type": "array" },
+        "commentsCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "weddingId", "authorUid", "authorName", "mediaType", "album", "mediaUrl", "likesCount", "commentsCount", "createdAt"]
+    },
+    "MemoryComment": {
+      "title": "MemoryComment",
+      "description": "Comment on a wedding memory photo or reel.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "memoryId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "authorName": { "type": "string", "maxLength": 80 },
+        "text": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "memoryId", "authorUid", "authorName", "text", "createdAt"]
+    },
+    "SafetyReport": {
+      "title": "SafetyReport",
+      "description": "User-submitted safety report for inappropriate behavior or spam.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reporterUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reportedUid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "weddingId": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "reason": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "details": { "type": "string", "maxLength": 600 },
+        "status": { "type": "string", "enum": ["open", "reviewed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "reporterUid", "reportedUid", "reason", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Private user account PII, verification, preferences, and blocklist."
+    },
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/GuestProfile" },
+      "description": "Opt-in community matchmaking profiles (zero PII)."
+    },
+    "/weddings/{weddingId}": {
+      "schema": { "$ref": "#/entities/WeddingEvent" },
+      "description": "Wedding community events, Heart QR metadata, and planner controls."
+    },
+    "/weddings/{weddingId}/members/{memberUid}": {
+      "schema": { "$ref": "#/entities/WeddingMember" },
+      "description": "Guest membership and explicit matchmaking opt-in state per wedding."
+    },
+    "/swipes/{swipeId}": {
+      "schema": { "$ref": "#/entities/SwipeAction" },
+      "description": "Like, Pass, Super Like, and Secret Crush actions."
+    },
+    "/matches/{matchId}": {
+      "schema": { "$ref": "#/entities/MatchRecord" },
+      "description": "Mutual matches between opted-in guests."
+    },
+    "/matches/{matchId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/ChatMessage" },
+      "description": "Private chat messages restricted exclusively to match participants."
+    },
+    "/weddings/{weddingId}/memories/{memoryId}": {
+      "schema": { "$ref": "#/entities/WeddingMemory" },
+      "description": "Shared wedding photos, video reels, and stories."
+    },
+    "/weddings/{weddingId}/memories/{memoryId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/MemoryComment" },
+      "description": "Comments on wedding memories."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/SafetyReport" },
+      "description": "Safety and anti-harassment reports."
+    }
+  }
+}

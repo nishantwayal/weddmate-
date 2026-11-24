@@ -1,0 +1,575 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Global Hardened Primitives
+    // -------------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedAccount() {
+      return isSignedIn() && (
+        request.auth.token.email_verified == true ||
+        request.auth.token.phone_number != null
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidCompositeId(id) {
+      return id is string && id.size() >= 3 && id.size() <= 280 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'n70305974@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // Entity Validation Helpers (Anti-Update-Gap)
+    // -------------------------------------------------------------------------
+    function isValidUserAccount(data) {
+      return data.keys().hasAll(['uid', 'ageConfirmed18Plus', 'acceptedTerms', 'role', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'uid', 'email', 'phone', 'phoneVerified', 'ageConfirmed18Plus', 'acceptedTerms',
+          'matchmakingPaused', 'profileVisibility', 'preferredAgeMin', 'preferredAgeMax',
+          'preferredLocations', 'partnerPreferences', 'instagramId', 'role',
+          'blockedUserIds', 'deletionRequested', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.uid) &&
+        data.ageConfirmed18Plus == true &&
+        data.acceptedTerms == true &&
+        data.role in ['guest', 'planner'] &&
+        (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 32)) &&
+        (!('phoneVerified' in data) || data.phoneVerified is bool) &&
+        (!('matchmakingPaused' in data) || data.matchmakingPaused is bool) &&
+        (!('profileVisibility' in data) || data.profileVisibility in ['wedding_only', 'matches_only', 'hidden']) &&
+        (!('preferredAgeMin' in data) || (data.preferredAgeMin is number && data.preferredAgeMin >= 18 && data.preferredAgeMin <= 99)) &&
+        (!('preferredAgeMax' in data) || (data.preferredAgeMax is number && data.preferredAgeMax >= 18 && data.preferredAgeMax <= 99)) &&
+        (!('preferredLocations' in data) || (data.preferredLocations is list && data.preferredLocations.size() <= 10 && (data.preferredLocations.size() == 0 || data.preferredLocations[0] is string))) &&
+        (!('partnerPreferences' in data) || (data.partnerPreferences is string && data.partnerPreferences.size() <= 500)) &&
+        (!('instagramId' in data) || (data.instagramId is string && data.instagramId.size() <= 64)) &&
+        (!('blockedUserIds' in data) || (data.blockedUserIds is list && data.blockedUserIds.size() <= 100 && (data.blockedUserIds.size() == 0 || data.blockedUserIds[0] is string))) &&
+        (!('deletionRequested' in data) || data.deletionRequested is bool) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidGuestProfile(data) {
+      return data.keys().hasAll(['uid', 'fullName', 'age', 'gender', 'city', 'optedInDiscover', 'visibility', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'uid', 'fullName', 'age', 'gender', 'city', 'profession', 'education',
+          'hobbies', 'intention', 'bio', 'weddingSide', 'languages', 'photos',
+          'primaryPhoto', 'weddingIds', 'optedInDiscover', 'visibility',
+          'identityVerified', 'mutualConsentVisible', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.uid) &&
+        data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 80 &&
+        data.age is number && data.age >= 18 && data.age <= 99 &&
+        data.gender in ['Woman', 'Man', 'Non-binary'] &&
+        data.city is string && data.city.size() >= 1 && data.city.size() <= 80 &&
+        (!('profession' in data) || (data.profession is string && data.profession.size() <= 100)) &&
+        (!('education' in data) || (data.education is string && data.education.size() <= 100)) &&
+        (!('hobbies' in data) || (data.hobbies is list && data.hobbies.size() <= 12 && (data.hobbies.size() == 0 || data.hobbies[0] is string))) &&
+        (!('intention' in data) || data.intention in ['Marriage', 'Serious Relationship', 'Getting to Know People', 'Open to Connection']) &&
+        (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+        (!('weddingSide' in data) || data.weddingSide in ["Bride's Side", "Groom's Side", "Both Sides"]) &&
+        (!('languages' in data) || (data.languages is list && data.languages.size() <= 12 && (data.languages.size() == 0 || data.languages[0] is string))) &&
+        (!('photos' in data) || (data.photos is list && data.photos.size() <= 6 && (data.photos.size() == 0 || data.photos[0] is string))) &&
+        (!('primaryPhoto' in data) || (data.primaryPhoto is string && data.primaryPhoto.size() <= 450000)) &&
+        (!('weddingIds' in data) || (data.weddingIds is list && data.weddingIds.size() <= 20 && (data.weddingIds.size() == 0 || data.weddingIds[0] is string))) &&
+        data.optedInDiscover is bool &&
+        data.visibility in ['visible', 'paused', 'hidden'] &&
+        (!('identityVerified' in data) || data.identityVerified is bool) &&
+        (!('mutualConsentVisible' in data) || data.mutualConsentVisible is bool) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidWeddingEvent(data) {
+      return data.keys().hasAll([
+          'id', 'plannerUid', 'weddingName', 'brideName', 'groomName', 'weddingDate',
+          'venue', 'durationPreset', 'expiresAtMs', 'qrCodeToken', 'status', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'plannerUid', 'weddingName', 'brideName', 'groomName', 'weddingDate',
+          'venue', 'durationPreset', 'expiresAtMs', 'qrCodeToken', 'joinPermission',
+          'matchmakingEnabled', 'memoriesEnabled', 'memoriesUploadPermission',
+          'status', 'planTier', 'guestCount', 'optedInCount', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.plannerUid) &&
+        data.weddingName is string && data.weddingName.size() >= 2 && data.weddingName.size() <= 120 &&
+        data.brideName is string && data.brideName.size() >= 1 && data.brideName.size() <= 60 &&
+        data.groomName is string && data.groomName.size() >= 1 && data.groomName.size() <= 60 &&
+        data.weddingDate is string && data.weddingDate.size() >= 4 && data.weddingDate.size() <= 40 &&
+        data.venue is string && data.venue.size() >= 2 && data.venue.size() <= 140 &&
+        data.durationPreset in ['2_days', '3_days', '5_days', 'custom'] &&
+        data.expiresAtMs is number && data.expiresAtMs > 0 &&
+        isValidId(data.qrCodeToken) &&
+        (!('joinPermission' in data) || data.joinPermission in ['open_qr', 'approval_required', 'invite_only']) &&
+        (!('matchmakingEnabled' in data) || data.matchmakingEnabled is bool) &&
+        (!('memoriesEnabled' in data) || data.memoriesEnabled is bool) &&
+        (!('memoriesUploadPermission' in data) || data.memoriesUploadPermission in ['all_guests', 'organizer_only']) &&
+        data.status in ['active', 'expired'] &&
+        (!('planTier' in data) || data.planTier in ['Basic', 'Premium', 'Luxury']) &&
+        (!('guestCount' in data) || (data.guestCount is number && data.guestCount >= 0)) &&
+        (!('optedInCount' in data) || (data.optedInCount is number && data.optedInCount >= 0)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidWeddingMember(data) {
+      return data.keys().hasAll(['uid', 'weddingId', 'side', 'optedInMatchmaking', 'status', 'joinedAt']) &&
+        data.keys().hasOnly(['uid', 'weddingId', 'side', 'optedInMatchmaking', 'fullName', 'city', 'status', 'joinedAt']) &&
+        isValidId(data.uid) &&
+        isValidId(data.weddingId) &&
+        data.side in ["Bride's Side", "Groom's Side"] &&
+        data.optedInMatchmaking is bool &&
+        (!('fullName' in data) || (data.fullName is string && data.fullName.size() <= 80)) &&
+        (!('city' in data) || (data.city is string && data.city.size() <= 80)) &&
+        data.status in ['active', 'pending', 'removed'] &&
+        data.joinedAt is timestamp;
+    }
+
+    function isValidSwipeAction(data) {
+      return data.keys().hasAll(['fromUid', 'toUid', 'weddingId', 'action', 'createdAt']) &&
+        data.keys().hasOnly(['fromUid', 'toUid', 'weddingId', 'action', 'createdAt']) &&
+        isValidId(data.fromUid) &&
+        isValidId(data.toUid) &&
+        data.fromUid != data.toUid &&
+        isValidId(data.weddingId) &&
+        data.action in ['like', 'pass', 'secret_crush', 'super_like'] &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidMatchRecord(data) {
+      return data.keys().hasAll(['id', 'user1Uid', 'user2Uid', 'participants', 'weddingId', 'weddingName', 'status', 'matchedAt', 'updatedAt']) &&
+        data.keys().hasOnly([
+          'id', 'user1Uid', 'user2Uid', 'participants', 'weddingId', 'weddingName',
+          'status', 'icebreakerPrompt', 'lastMessagePreview',
+          'contactShareConsentUser1', 'contactShareConsentUser2', 'matchedAt', 'updatedAt'
+        ]) &&
+        isValidCompositeId(data.id) &&
+        isValidId(data.user1Uid) &&
+        isValidId(data.user2Uid) &&
+        data.user1Uid != data.user2Uid &&
+        data.participants is list && data.participants.size() == 2 &&
+        data.participants[0] is string && data.participants[1] is string &&
+        data.user1Uid in data.participants && data.user2Uid in data.participants &&
+        isValidId(data.weddingId) &&
+        data.weddingName is string && data.weddingName.size() <= 120 &&
+        data.status in ['active', 'unmatched'] &&
+        (!('icebreakerPrompt' in data) || (data.icebreakerPrompt is string && data.icebreakerPrompt.size() <= 240)) &&
+        (!('lastMessagePreview' in data) || (data.lastMessagePreview is string && data.lastMessagePreview.size() <= 200)) &&
+        (!('contactShareConsentUser1' in data) || data.contactShareConsentUser1 is bool) &&
+        (!('contactShareConsentUser2' in data) || data.contactShareConsentUser2 is bool) &&
+        data.matchedAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidChatMessage(data) {
+      return data.keys().hasAll(['id', 'matchId', 'senderUid', 'type', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'matchId', 'senderUid', 'text', 'imageDataUrl', 'type', 'readBy', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidCompositeId(data.matchId) &&
+        isValidId(data.senderUid) &&
+        data.type in ['text', 'image', 'icebreaker'] &&
+        (!('text' in data) || (data.text is string && data.text.size() <= 1200)) &&
+        (!('imageDataUrl' in data) || (data.imageDataUrl is string && data.imageDataUrl.size() <= 450000)) &&
+        (!('readBy' in data) || (data.readBy is list && data.readBy.size() <= 2 && (data.readBy.size() == 0 || data.readBy[0] is string))) &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidWeddingMemory(data) {
+      return data.keys().hasAll(['id', 'weddingId', 'authorUid', 'authorName', 'mediaType', 'album', 'mediaUrl', 'likesCount', 'commentsCount', 'createdAt']) &&
+        data.keys().hasOnly([
+          'id', 'weddingId', 'authorUid', 'authorName', 'mediaType', 'album',
+          'mediaUrl', 'caption', 'allowDownload', 'featuredOnLiveWall',
+          'likesCount', 'likedBy', 'commentsCount', 'createdAt'
+        ]) &&
+        isValidId(data.id) &&
+        isValidId(data.weddingId) &&
+        isValidId(data.authorUid) &&
+        data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80 &&
+        data.mediaType in ['photo', 'reel', 'story'] &&
+        data.album in ['Haldi', 'Mehendi', 'Sangeet', 'Reception'] &&
+        data.mediaUrl is string && data.mediaUrl.size() >= 1 && data.mediaUrl.size() <= 600000 &&
+        (!('caption' in data) || (data.caption is string && data.caption.size() <= 300)) &&
+        (!('allowDownload' in data) || data.allowDownload is bool) &&
+        (!('featuredOnLiveWall' in data) || data.featuredOnLiveWall is bool) &&
+        data.likesCount is number && data.likesCount >= 0 &&
+        (!('likedBy' in data) || (data.likedBy is list && data.likedBy.size() <= 500 && (data.likedBy.size() == 0 || data.likedBy[0] is string))) &&
+        data.commentsCount is number && data.commentsCount >= 0 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidMemoryComment(data) {
+      return data.keys().hasAll(['id', 'memoryId', 'authorUid', 'authorName', 'text', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'memoryId', 'authorUid', 'authorName', 'text', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.memoryId) &&
+        isValidId(data.authorUid) &&
+        data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80 &&
+        data.text is string && data.text.size() >= 1 && data.text.size() <= 400 &&
+        data.createdAt is timestamp;
+    }
+
+    function isValidSafetyReport(data) {
+      return data.keys().hasAll(['id', 'reporterUid', 'reportedUid', 'reason', 'status', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'reporterUid', 'reportedUid', 'weddingId', 'reason', 'details', 'status', 'createdAt']) &&
+        isValidId(data.id) &&
+        isValidId(data.reporterUid) &&
+        isValidId(data.reportedUid) &&
+        (!('weddingId' in data) || isValidId(data.weddingId)) &&
+        data.reason is string && data.reason.size() >= 2 && data.reason.size() <= 120 &&
+        (!('details' in data) || (data.details is string && data.details.size() <= 600)) &&
+        data.status in ['open', 'reviewed'] &&
+        data.createdAt is timestamp;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    // 1. Private User Account & PII (Strictly Owner Only)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow create: if isValidId(userId) && isVerifiedAccount() && isOwner(userId) &&
+        isValidUserAccount(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isVerifiedAccount() &&
+        isValidUserAccount(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() || (
+            isOwner(userId) &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'email', 'phone', 'phoneVerified', 'matchmakingPaused', 'profileVisibility',
+              'preferredAgeMin', 'preferredAgeMax', 'preferredLocations', 'partnerPreferences',
+              'instagramId', 'role', 'blockedUserIds', 'deletionRequested', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // 2. Matchmaking Profiles (Zero PII; Opt-In & Visibility Enforced)
+    match /profiles/{userId} {
+      allow get: if isValidId(userId) && isSignedIn() && (
+        isOwner(userId) ||
+        isAdmin() ||
+        (existing().optedInDiscover == true && existing().visibility == 'visible')
+      );
+      allow list: if isSignedIn() && (
+        existing().uid == request.auth.uid ||
+        (existing().optedInDiscover == true && existing().visibility == 'visible')
+      );
+      allow create: if isValidId(userId) && isVerifiedAccount() && isOwner(userId) &&
+        isValidGuestProfile(incoming()) &&
+        incoming().uid == request.auth.uid &&
+        incoming().identityVerified == false &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(userId) && isVerifiedAccount() &&
+        isValidGuestProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() || (
+            isOwner(userId) &&
+            incoming().identityVerified == existing().identityVerified &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'fullName', 'age', 'gender', 'city', 'profession', 'education',
+              'hobbies', 'intention', 'bio', 'weddingSide', 'languages', 'photos',
+              'primaryPhoto', 'weddingIds', 'optedInDiscover', 'visibility',
+              'mutualConsentVisible', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // 3. Wedding Events & Heart QR Communities
+    match /weddings/{weddingId} {
+      allow get: if isValidId(weddingId) && isSignedIn();
+      allow list: if isSignedIn() && (existing().status == 'active' || existing().plannerUid == request.auth.uid);
+      allow create: if isValidId(weddingId) && isVerifiedAccount() &&
+        isValidWeddingEvent(incoming()) &&
+        incoming().id == weddingId &&
+        incoming().plannerUid == request.auth.uid &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(weddingId) && isVerifiedAccount() &&
+        isValidWeddingEvent(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().plannerUid == existing().plannerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            existing().plannerUid == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'weddingName', 'brideName', 'groomName', 'weddingDate', 'venue',
+              'durationPreset', 'expiresAtMs', 'joinPermission', 'matchmakingEnabled',
+              'memoriesEnabled', 'memoriesUploadPermission', 'status', 'planTier',
+              'guestCount', 'optedInCount', 'updatedAt'
+            ])
+          ) ||
+          (
+            existing().status == 'active' &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['guestCount', 'optedInCount', 'updatedAt'])
+          )
+        );
+      allow delete: if isValidId(weddingId) && (existing().plannerUid == request.auth.uid || isAdmin());
+
+      // 4. Wedding Community Members (Master Gate: Wedding must exist)
+      match /members/{memberUid} {
+        function weddingDoc() {
+          return get(/databases/$(database)/documents/weddings/$(weddingId)).data;
+        }
+        function weddingExists() {
+          return exists(/databases/$(database)/documents/weddings/$(weddingId));
+        }
+        allow get: if isValidId(weddingId) && isValidId(memberUid) && isSignedIn() && (
+          memberUid == request.auth.uid ||
+          weddingDoc().plannerUid == request.auth.uid ||
+          (existing().status == 'active' && exists(/databases/$(database)/documents/weddings/$(weddingId)/members/$(request.auth.uid)))
+        );
+        allow list: if isSignedIn() && (
+          existing().uid == request.auth.uid ||
+          existing().status == 'active'
+        );
+        allow create: if isValidId(weddingId) && isValidId(memberUid) && isVerifiedAccount() &&
+          isValidWeddingMember(incoming()) &&
+          weddingExists() &&
+          weddingDoc().status == 'active' &&
+          memberUid == request.auth.uid &&
+          incoming().uid == request.auth.uid &&
+          incoming().weddingId == weddingId &&
+          incoming().joinedAt == request.time;
+        allow update: if isValidId(weddingId) && isValidId(memberUid) && isVerifiedAccount() &&
+          isValidWeddingMember(incoming()) &&
+          weddingExists() &&
+          incoming().uid == existing().uid &&
+          incoming().weddingId == existing().weddingId &&
+          incoming().joinedAt == existing().joinedAt && (
+            isAdmin() ||
+            (
+              memberUid == request.auth.uid &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['side', 'optedInMatchmaking', 'fullName', 'city'])
+            ) ||
+            (
+              weddingDoc().plannerUid == request.auth.uid &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['status'])
+            )
+          );
+        allow delete: if isValidId(weddingId) && isValidId(memberUid) && (
+          memberUid == request.auth.uid || weddingDoc().plannerUid == request.auth.uid || isAdmin()
+        );
+      }
+
+      // 8. Weddmate Memories (Photos, Reels, Stories)
+      match /memories/{memoryId} {
+        function parentWedding() {
+          return get(/databases/$(database)/documents/weddings/$(weddingId)).data;
+        }
+        function canUploadMemory() {
+          return parentWedding().memoriesEnabled == true && (
+            parentWedding().plannerUid == request.auth.uid ||
+            parentWedding().memoriesUploadPermission == 'all_guests'
+          );
+        }
+        allow get: if isValidId(weddingId) && isValidId(memoryId) && isSignedIn();
+        allow list: if isSignedIn() && existing().weddingId == weddingId;
+        allow create: if isValidId(weddingId) && isValidId(memoryId) && isVerifiedAccount() &&
+          isValidWeddingMemory(incoming()) &&
+          exists(/databases/$(database)/documents/weddings/$(weddingId)) &&
+          canUploadMemory() &&
+          incoming().id == memoryId &&
+          incoming().weddingId == weddingId &&
+          incoming().authorUid == request.auth.uid &&
+          incoming().likesCount == 0 &&
+          incoming().commentsCount == 0 &&
+          incoming().createdAt == request.time;
+        allow update: if isValidId(weddingId) && isValidId(memoryId) && isVerifiedAccount() &&
+          isValidWeddingMemory(incoming()) &&
+          incoming().id == existing().id &&
+          incoming().weddingId == existing().weddingId &&
+          incoming().authorUid == existing().authorUid &&
+          incoming().createdAt == existing().createdAt && (
+            isAdmin() ||
+            (
+              parentWedding().plannerUid == request.auth.uid &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['featuredOnLiveWall', 'allowDownload'])
+            ) ||
+            (
+              existing().authorUid == request.auth.uid &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['caption', 'album', 'allowDownload'])
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['likesCount', 'likedBy'])
+            ) ||
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly(['commentsCount'])
+            )
+          );
+        allow delete: if isValidId(weddingId) && isValidId(memoryId) && (
+          existing().authorUid == request.auth.uid ||
+          parentWedding().plannerUid == request.auth.uid ||
+          isAdmin()
+        );
+
+        // 9. Memory Comments
+        match /comments/{commentId} {
+          allow get: if isValidId(weddingId) && isValidId(memoryId) && isValidId(commentId) && isSignedIn();
+          allow list: if isSignedIn() && existing().memoryId == memoryId;
+          allow create: if isValidId(weddingId) && isValidId(memoryId) && isValidId(commentId) && isVerifiedAccount() &&
+            isValidMemoryComment(incoming()) &&
+            exists(/databases/$(database)/documents/weddings/$(weddingId)/memories/$(memoryId)) &&
+            incoming().id == commentId &&
+            incoming().memoryId == memoryId &&
+            incoming().authorUid == request.auth.uid &&
+            incoming().createdAt == request.time;
+          allow delete: if isValidId(weddingId) && isValidId(memoryId) && isValidId(commentId) && (
+            existing().authorUid == request.auth.uid || isAdmin()
+          );
+        }
+      }
+    }
+
+    // 5. Swipes & Secret Crush Confidentiality
+    match /swipes/{swipeId} {
+      allow get: if isValidCompositeId(swipeId) && isSignedIn() && (
+        existing().fromUid == request.auth.uid ||
+        (
+          existing().toUid == request.auth.uid &&
+          exists(/databases/$(database)/documents/swipes/$(request.auth.uid + '_' + existing().fromUid + '_' + existing().weddingId)) &&
+          get(/databases/$(database)/documents/swipes/$(request.auth.uid + '_' + existing().fromUid + '_' + existing().weddingId)).data.action in ['like', 'secret_crush', 'super_like']
+        )
+      );
+      allow list: if isSignedIn() && existing().fromUid == request.auth.uid;
+      allow create: if isValidCompositeId(swipeId) && isVerifiedAccount() &&
+        isValidSwipeAction(incoming()) &&
+        swipeId == (incoming().fromUid + '_' + incoming().toUid + '_' + incoming().weddingId) &&
+        incoming().fromUid == request.auth.uid &&
+        exists(/databases/$(database)/documents/weddings/$(incoming().weddingId)) &&
+        incoming().createdAt == request.time;
+      allow update: if isValidCompositeId(swipeId) && isVerifiedAccount() &&
+        isValidSwipeAction(incoming()) &&
+        existing().fromUid == request.auth.uid &&
+        incoming().fromUid == existing().fromUid &&
+        incoming().toUid == existing().toUid &&
+        incoming().weddingId == existing().weddingId &&
+        incoming().createdAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['action', 'createdAt']);
+      allow delete: if isValidCompositeId(swipeId) && (existing().fromUid == request.auth.uid || isAdmin());
+    }
+
+    // 6. Mutual Matches (Participants Only — Planners Strictly Excluded)
+    match /matches/{matchId} {
+      allow get: if isValidCompositeId(matchId) && isSignedIn() && (
+        request.auth.uid in existing().participants || isAdmin()
+      );
+      allow list: if isSignedIn() && request.auth.uid in existing().participants;
+      allow create: if isValidCompositeId(matchId) && isVerifiedAccount() &&
+        isValidMatchRecord(incoming()) &&
+        incoming().id == matchId &&
+        request.auth.uid in incoming().participants &&
+        incoming().status == 'active' &&
+        exists(/databases/$(database)/documents/weddings/$(incoming().weddingId)) &&
+        incoming().matchedAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidCompositeId(matchId) && isVerifiedAccount() &&
+        isValidMatchRecord(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().user1Uid == existing().user1Uid &&
+        incoming().user2Uid == existing().user2Uid &&
+        incoming().participants == existing().participants &&
+        incoming().weddingId == existing().weddingId &&
+        incoming().matchedAt == existing().matchedAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() || (
+            request.auth.uid in existing().participants &&
+            existing().status != 'unmatched' &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'lastMessagePreview', 'contactShareConsentUser1', 'contactShareConsentUser2', 'updatedAt'
+            ])
+          )
+        );
+      allow delete: if isValidCompositeId(matchId) && (request.auth.uid in existing().participants || isAdmin());
+
+      // 7. Private Chat Messages (Master Gate on Parent Match)
+      match /messages/{messageId} {
+        function parentMatch() {
+          return get(/databases/$(database)/documents/matches/$(matchId)).data;
+        }
+        function isMatchParticipant() {
+          return isSignedIn() && request.auth.uid in parentMatch().participants;
+        }
+        allow get, list: if isMatchParticipant();
+        allow create: if isValidCompositeId(matchId) && isValidId(messageId) && isVerifiedAccount() &&
+          isValidChatMessage(incoming()) &&
+          isMatchParticipant() &&
+          parentMatch().status == 'active' &&
+          incoming().id == messageId &&
+          incoming().matchId == matchId &&
+          incoming().senderUid == request.auth.uid &&
+          incoming().createdAt == request.time;
+        allow update: if isValidCompositeId(matchId) && isValidId(messageId) && isVerifiedAccount() &&
+          isValidChatMessage(incoming()) &&
+          isMatchParticipant() &&
+          incoming().id == existing().id &&
+          incoming().matchId == existing().matchId &&
+          incoming().senderUid == existing().senderUid &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().diff(existing()).affectedKeys().hasOnly(['readBy']);
+        allow delete: if isValidCompositeId(matchId) && isValidId(messageId) && (
+          isMatchParticipant() || isAdmin()
+        );
+      }
+    }
+
+    // 10. Safety & Harassment Reports
+    match /reports/{reportId} {
+      allow get: if isValidId(reportId) && isSignedIn() && (existing().reporterUid == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && existing().reporterUid == request.auth.uid;
+      allow create: if isValidId(reportId) && isVerifiedAccount() &&
+        isValidSafetyReport(incoming()) &&
+        incoming().id == reportId &&
+        incoming().reporterUid == request.auth.uid &&
+        incoming().status == 'open' &&
+        incoming().createdAt == request.time;
+      allow update: if isValidId(reportId) && isAdmin() &&
+        isValidSafetyReport(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if isValidId(reportId) && isAdmin();
+    }
+  }
+}
