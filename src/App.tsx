@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { deleteUser, onAuthStateChanged, User } from 'firebase/auth';
 import {
   collection,
@@ -46,14 +46,29 @@ import { isRtlLanguage, SUPPORTED_LANGUAGES, t } from './i18n/translations';
 import { DEFAULT_WEDDING_ID, SEED_GUEST_PROFILES, SEED_WEDDING_EVENT } from './data/seedProfiles';
 import { createDeterministicMatchId, formatCountdown, ICEBREAKER_PROMPTS } from './utils/matching';
 import { WebsiteLanding } from './components/WebsiteLanding';
-import { AuthModal } from './components/AuthModal';
-import { QrJoinModal } from './components/QrJoinModal';
 import { HeartQrCode } from './components/HeartQrCode';
-import { DiscoverView } from './components/DiscoverView';
-import { MatchesChatView } from './components/MatchesChatView';
-import { MemoriesView } from './components/MemoriesView';
-import { ProfileSafetyView } from './components/ProfileSafetyView';
-import { PlannerDashboard } from './components/PlannerDashboard';
+
+const AuthModal = lazy(() =>
+  import('./components/AuthModal').then((m) => ({ default: m.AuthModal }))
+);
+const QrJoinModal = lazy(() =>
+  import('./components/QrJoinModal').then((m) => ({ default: m.QrJoinModal }))
+);
+const DiscoverView = lazy(() =>
+  import('./components/DiscoverView').then((m) => ({ default: m.DiscoverView }))
+);
+const MatchesChatView = lazy(() =>
+  import('./components/MatchesChatView').then((m) => ({ default: m.MatchesChatView }))
+);
+const MemoriesView = lazy(() =>
+  import('./components/MemoriesView').then((m) => ({ default: m.MemoriesView }))
+);
+const ProfileSafetyView = lazy(() =>
+  import('./components/ProfileSafetyView').then((m) => ({ default: m.ProfileSafetyView }))
+);
+const PlannerDashboard = lazy(() =>
+  import('./components/PlannerDashboard').then((m) => ({ default: m.PlannerDashboard }))
+);
 
 export default function App() {
   const [lang, setLang] = useState<LanguageCode>('en');
@@ -579,18 +594,22 @@ export default function App() {
             }
           }}
         />
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          currentUser={currentUser}
-          onAuthenticated={async (user, role) => {
-            await ensureUserBootstrapped(user, role);
-            if (user.emailVerified || user.phoneNumber) {
-              setShowAuthModal(false);
-              setSubView(role === 'planner' ? 'planner' : 'main');
-            }
-          }}
-        />
+        <Suspense fallback={null}>
+          {showAuthModal && (
+            <AuthModal
+              isOpen={showAuthModal}
+              onClose={() => setShowAuthModal(false)}
+              currentUser={currentUser}
+              onAuthenticated={async (user, role) => {
+                await ensureUserBootstrapped(user, role);
+                if (user.emailVerified || user.phoneNumber) {
+                  setShowAuthModal(false);
+                  setSubView(role === 'planner' ? 'planner' : 'main');
+                }
+              }}
+            />
+          )}
+        </Suspense>
       </>
     );
   }
@@ -648,7 +667,7 @@ export default function App() {
           </nav>
 
           <div className="pt-4 border-t border-[#DFCBB2] dark:border-[#361C25] space-y-1">
-            <div className="px-3 text-[11px] font-medium text-[#8F6A20] dark:text-[#D4AF5A] mb-1">
+            <div className="px-3 text-[11px] font-medium text-[#735312] dark:text-[#D4AF5A] mb-1">
               Wedding Community
             </div>
             <button
@@ -768,6 +787,13 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 lg:pl-64 pb-24 lg:pb-10 pt-6 px-4 sm:px-8">
+        <Suspense
+          fallback={
+            <div className="max-w-4xl mx-auto py-16 text-center text-sm text-[#6E535B] dark:text-[#C7B3B8]">
+              Loading Weddmate workspace...
+            </div>
+          }
+        >
         {!isVerifiedSession ? (
           <div className="max-w-lg mx-auto py-16 text-center bg-white dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B] rounded-3xl p-8">
             <ShieldCheck className="w-10 h-10 mx-auto text-[#6B1D2F] dark:text-[#D4AF5A] mb-3" />
@@ -805,7 +831,7 @@ export default function App() {
             {activeWedding && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[#F3ECE2] dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B] rounded-3xl p-6 sm:p-8">
                 <div className="lg:col-span-7 space-y-4">
-                  <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A] flex items-center gap-2 font-mono-tabular">
+                  <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A] flex items-center gap-2 font-mono-tabular">
                     <span>Active Wedding Community</span>
                     <span>·</span>
                     <span className="inline-flex items-center gap-1">
@@ -922,7 +948,7 @@ export default function App() {
                 </div>
                 <div className="p-5 flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+                    <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
                       Haldi · Mehendi · Sangeet · Reception
                     </div>
                     <h3 className="font-display text-2xl font-semibold">
@@ -947,7 +973,7 @@ export default function App() {
                 </div>
                 <div className="p-5 flex items-center justify-between">
                   <div>
-                    <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+                    <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
                       2, 3, 5 Days or Custom Expiry
                     </div>
                     <h3 className="font-display text-2xl font-semibold">
@@ -1041,6 +1067,7 @@ export default function App() {
             onRequestDataDeletion={handleRequestDataDeletion}
           />
         ) : null}
+        </Suspense>
       </main>
 
       {/* Mobile Fixed 5-Tab Bottom Bar (Home, Discover, Matches, Chat, Profile) */}
@@ -1072,25 +1099,31 @@ export default function App() {
       </nav>
 
       {/* Modals & Toast */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        currentUser={currentUser}
-        onAuthenticated={async (user, role) => {
-          await ensureUserBootstrapped(user, role);
-          if (user.emailVerified || user.phoneNumber) {
-            setShowAuthModal(false);
-            setSubView(role === 'planner' ? 'planner' : 'main');
-          }
-        }}
-      />
+      <Suspense fallback={null}>
+        {showAuthModal && (
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            currentUser={currentUser}
+            onAuthenticated={async (user, role) => {
+              await ensureUserBootstrapped(user, role);
+              if (user.emailVerified || user.phoneNumber) {
+                setShowAuthModal(false);
+                setSubView(role === 'planner' ? 'planner' : 'main');
+              }
+            }}
+          />
+        )}
 
-      <QrJoinModal
-        isOpen={showQrJoinModal}
-        onClose={() => setShowQrJoinModal(false)}
-        availableWeddings={allWeddings}
-        onJoinWedding={handleJoinWedding}
-      />
+        {showQrJoinModal && (
+          <QrJoinModal
+            isOpen={showQrJoinModal}
+            onClose={() => setShowQrJoinModal(false)}
+            availableWeddings={allWeddings}
+            onJoinWedding={handleJoinWedding}
+          />
+        )}
+      </Suspense>
 
       {toastMsg && (
         <div className="fixed bottom-20 lg:bottom-6 right-5 z-50 px-4 py-2.5 rounded-xl bg-[#2A151B] dark:bg-[#FAF6F0] text-[#FAF6F0] dark:text-[#2A151B] text-xs font-medium shadow-lg">

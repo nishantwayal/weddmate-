@@ -123,7 +123,7 @@ export const ProfileSafetyView: React.FC<ProfileSafetyViewProps> = ({
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+          <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
             Personalised Matchmaking &amp; Privacy Controls
           </div>
           <h2 className="font-display text-3xl font-semibold text-[#2A151B] dark:text-[#F5EDE2]">
@@ -192,7 +192,7 @@ export const ProfileSafetyView: React.FC<ProfileSafetyViewProps> = ({
           {/* Left Column: Photos & Personal Info */}
           <div className="lg:col-span-7 space-y-5 bg-white dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B] rounded-2xl p-6">
             <div>
-              <div className="text-xs font-semibold text-[#8F6A20] dark:text-[#D4AF5A] mb-2">
+              <div className="text-xs font-semibold text-[#735312] dark:text-[#D4AF5A] mb-2">
                 Photos (Up to 6)
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
@@ -406,7 +406,7 @@ export const ProfileSafetyView: React.FC<ProfileSafetyViewProps> = ({
           {/* Right Column: Visibility, Partner Preferences, Language, Theme & Safety */}
           <div className="lg:col-span-5 space-y-5">
             <div className="bg-white dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B] rounded-2xl p-6 space-y-4">
-              <div className="text-xs font-semibold text-[#8F6A20] dark:text-[#D4AF5A]">
+              <div className="text-xs font-semibold text-[#735312] dark:text-[#D4AF5A]">
                 Visibility &amp; Matchmaking Controls
               </div>
 

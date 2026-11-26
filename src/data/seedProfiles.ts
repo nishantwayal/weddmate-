@@ -18,7 +18,6 @@ export const SEED_WEDDING_EVENT: Omit<WeddingEvent, 'createdAt' | 'updatedAt'> =
   memoriesEnabled: true,
   memoriesUploadPermission: 'all_guests',
   status: 'active',
-  planTier: 'Luxury',
   guestCount: 4,
   optedInCount: 3,
 };

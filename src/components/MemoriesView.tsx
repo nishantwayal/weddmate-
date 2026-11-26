@@ -284,7 +284,7 @@ export const MemoriesView: React.FC<MemoriesViewProps> = ({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+          <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
             Separate from Matchmaking · {activeWedding?.weddingName || 'Wedding Digital Album'}
           </div>
           <h2 className="font-display text-3xl font-semibold text-[#2A151B] dark:text-[#F5EDE2]">

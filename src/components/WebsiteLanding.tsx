@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   Camera,
   MessageCircleHeart,
-  Check,
   Sun,
   Moon,
   Monitor,
@@ -75,12 +74,6 @@ export const WebsiteLanding: React.FC<WebsiteLandingProps> = ({
               className="hover:text-[#6B1D2F] dark:hover:text-[#D4AF5A] transition-colors whitespace-nowrap shrink-0"
             >
               Safety
-            </a>
-            <a
-              href="#planners"
-              className="hover:text-[#6B1D2F] dark:hover:text-[#D4AF5A] transition-colors whitespace-nowrap shrink-0"
-            >
-              Planners
             </a>
           </nav>
 
@@ -166,10 +159,11 @@ export const WebsiteLanding: React.FC<WebsiteLandingProps> = ({
       </div>
 
       {/* Hero Split */}
+      <main>
       <section id="top" className="max-w-7xl mx-auto px-5 sm:px-8 py-12 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
           <div className="lg:col-span-6 flex flex-col justify-center">
-            <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A] mb-3">
+            <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A] mb-3">
               Modern Luxury · Invitation-Only Wedding Communities
             </div>
             <h1
@@ -207,6 +201,8 @@ export const WebsiteLanding: React.FC<WebsiteLandingProps> = ({
                 src="/src/assets/images/hero_royal_wedding.jpg"
                 alt="Candlelit Indian heritage palace wedding courtyard with burgundy florals"
                 referrerPolicy="no-referrer"
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
@@ -263,7 +259,7 @@ export const WebsiteLanding: React.FC<WebsiteLandingProps> = ({
       <section id="heart-qr" className="max-w-7xl mx-auto px-5 sm:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center bg-[#F3ECE2] dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B] rounded-3xl p-7 sm:p-10">
           <div className="lg:col-span-7 space-y-4">
-            <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+            <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
               01. The Heart-Shaped Wedding QR System
             </div>
             <h2 className="font-display text-3xl sm:text-4xl font-semibold">
@@ -357,106 +353,7 @@ export const WebsiteLanding: React.FC<WebsiteLandingProps> = ({
         </div>
       </section>
 
-      {/* Planner Pricing Packages */}
-      <section id="planners" className="max-w-7xl mx-auto px-5 sm:px-8 py-12">
-        <div className="mb-8 max-w-2xl">
-          <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A] mb-2">
-            For Wedding Planners &amp; Heritage Venues
-          </div>
-          <h2 className="font-display text-3xl sm:text-4xl font-semibold mb-2">
-            Initial Pilot Packages
-          </h2>
-          <p className="text-sm text-[#5A3F47] dark:text-[#C7B3B8]">
-            Essential matchmaking features remain free for every wedding guest. Planners choose a
-            per-wedding package tailored to event duration and Memories Live Wall capacity.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            {
-              tier: 'Basic',
-              price: '₹999',
-              audience: 'For intimate 2-day celebrations',
-              features: [
-                'Up to 150 wedding guests',
-                'Custom Heart QR with 2-day expiry',
-                'Opt-in guest matchmaking & chat',
-                'CSV registration summary report',
-              ],
-            },
-            {
-              tier: 'Premium',
-              price: '₹2,999',
-              audience: 'For multi-function destination weddings',
-              featured: true,
-              features: [
-                'Up to 500 wedding guests',
-                '3–5 day configurable Heart QR expiry',
-                'Weddmate Memories albums & Reels',
-                'Side-by-side engagement analytics',
-              ],
-            },
-            {
-              tier: 'Luxury',
-              price: '₹5,999',
-              audience: 'For palace venues & multi-venue weddings',
-              features: [
-                'Unlimited guest capacity',
-                'Custom expiry & invite-only gates',
-                'Venue Live Wall display & Find My Photos',
-                'Priority planner branding & downloads',
-              ],
-            },
-          ].map((pkg) => (
-            <div
-              key={pkg.tier}
-              className={`rounded-2xl p-6 border flex flex-col justify-between ${
-                pkg.featured
-                  ? 'bg-[#6B1D2F] text-[#FAF6F0] border-[#6B1D2F]'
-                  : 'bg-white dark:bg-[#1E0F14] border-[#E5D9C8] dark:border-[#3D222B]'
-              }`}
-            >
-              <div>
-                <div
-                  className={`text-xs font-medium mb-1 ${
-                    pkg.featured ? 'text-[#E8C97A]' : 'text-[#8F6A20] dark:text-[#D4AF5A]'
-                  }`}
-                >
-                  {pkg.audience}
-                </div>
-                <div className="flex items-baseline justify-between mb-4">
-                  <h3 className="font-display text-2xl font-semibold">{pkg.tier}</h3>
-                  <span className="font-mono-tabular text-2xl font-semibold">{pkg.price}</span>
-                </div>
-                <ul className="space-y-2.5 text-sm mb-6">
-                  {pkg.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <Check
-                        className={`w-4 h-4 mt-0.5 shrink-0 ${
-                          pkg.featured ? 'text-[#E8C97A]' : 'text-[#6B1D2F] dark:text-[#D4AF5A]'
-                        }`}
-                      />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                type="button"
-                onClick={onOpenPlanner}
-                className={`w-full py-2.5 px-4 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
-                  pkg.featured
-                    ? 'bg-[#FAF6F0] text-[#6B1D2F] hover:bg-[#F3ECE2]'
-                    : 'bg-[#6B1D2F] text-[#FAF6F0] hover:bg-[#541524]'
-                }`}
-              >
-                Open Planner Studio
-              </button>
-            </div>
-          ))}
-        </div>
-      </section>
+      </main>
 
       <footer className="border-t border-[#E5D9C8] dark:border-[#361C25] py-8 px-5 sm:px-8 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6E535B] dark:text-[#C7B3B8]">
         <div className="flex items-center gap-2">

@@ -32,7 +32,6 @@ export type RelationshipIntention =
   | 'Open to Connection';
 
 export type DurationPreset = '2_days' | '3_days' | '5_days' | 'custom';
-export type PlanTier = 'Basic' | 'Premium' | 'Luxury';
 
 export interface UserAccount {
   uid: string;
@@ -96,7 +95,6 @@ export interface WeddingEvent {
   memoriesEnabled: boolean;
   memoriesUploadPermission: 'all_guests' | 'organizer_only';
   status: 'active' | 'expired';
-  planTier: PlanTier;
   guestCount: number;
   optedInCount: number;
   createdAt?: unknown;

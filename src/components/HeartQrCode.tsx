@@ -109,7 +109,7 @@ export const HeartQrCode: React.FC<HeartQrCodeProps> = ({
       ctx.textAlign = 'center';
       ctx.fillText(weddingName, 450, 118);
 
-      ctx.fillStyle = '#8F6A20';
+      ctx.fillStyle = '#735312';
       ctx.font = '500 28px sans-serif';
       ctx.fillText(coupleNames, 450, 166);
 

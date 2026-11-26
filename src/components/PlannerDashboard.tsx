@@ -9,7 +9,7 @@ import {
   Clock,
   Lock,
 } from 'lucide-react';
-import { DurationPreset, PlanTier, WeddingEvent } from '../types';
+import { DurationPreset, WeddingEvent } from '../types';
 import { HeartQrCode } from './HeartQrCode';
 import { formatCountdown } from '../utils/matching';
 
@@ -37,7 +37,6 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
   const [venue, setVenue] = useState('');
   const [durationPreset, setDurationPreset] = useState<DurationPreset>('3_days');
   const [customDays, setCustomDays] = useState(4);
-  const [planTier, setPlanTier] = useState<PlanTier>('Premium');
   const [joinPermission, setJoinPermission] = useState<'open_qr' | 'approval_required' | 'invite_only'>('open_qr');
   const [memoriesUploadPermission, setMemoriesUploadPermission] = useState<'all_guests' | 'organizer_only'>('all_guests');
   const [creating, setCreating] = useState(false);
@@ -74,7 +73,6 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
         memoriesEnabled: true,
         memoriesUploadPermission,
         status: 'active',
-        planTier,
         guestCount: 1,
         optedInCount: 0,
       });
@@ -90,8 +88,8 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
 
   const handleDownloadReport = (w: WeddingEvent) => {
     const csv = [
-      'Wedding Name,Bride,Groom,Date,Venue,QR Code,Plan Tier,Status,Guests Joined,Opted-In Matchmaking',
-      `"${w.weddingName}","${w.brideName}","${w.groomName}","${w.weddingDate}","${w.venue}","${w.qrCodeToken}","${w.planTier}","${w.status}",${w.guestCount},${w.optedInCount}`,
+      'Wedding Name,Bride,Groom,Date,Venue,QR Code,Status,Guests Joined,Opted-In Matchmaking',
+      `"${w.weddingName}","${w.brideName}","${w.groomName}","${w.weddingDate}","${w.venue}","${w.qrCodeToken}","${w.status}",${w.guestCount},${w.optedInCount}`,
     ].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -106,7 +104,7 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
     <div className="max-w-7xl mx-auto space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+          <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
             Wedding Planner &amp; Venue Studio
           </div>
           <h2 className="font-display text-3xl font-semibold text-[#2A151B] dark:text-[#F5EDE2]">
@@ -231,7 +229,7 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium mb-1">Join Permission</label>
               <select
@@ -257,18 +255,6 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
               >
                 <option value="all_guests">All Wedding Guests</option>
                 <option value="organizer_only">Organiser Only</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium mb-1">Pilot Package</label>
-              <select
-                value={planTier}
-                onChange={(e) => setPlanTier(e.target.value as PlanTier)}
-                className="w-full px-3 py-2 rounded-xl bg-[#FAF6F0] dark:bg-[#2A151C] border border-[#DFCBB2] dark:border-[#4A2833] text-xs"
-              >
-                <option value="Basic">Basic (₹999)</option>
-                <option value="Premium">Premium (₹2,999)</option>
-                <option value="Luxury">Luxury (₹5,999)</option>
               </select>
             </div>
           </div>
@@ -374,7 +360,6 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
                 <th className="py-3 px-4 font-medium">Wedding</th>
                 <th className="py-3 px-4 font-medium">Heart QR</th>
                 <th className="py-3 px-4 font-medium">Expiry</th>
-                <th className="py-3 px-4 font-medium">Package</th>
                 <th className="py-3 px-4 font-medium text-right">Guests</th>
                 <th className="py-3 px-4 font-medium text-right">Action</th>
               </tr>
@@ -397,7 +382,6 @@ export const PlannerDashboard: React.FC<PlannerDashboardProps> = ({
                       {formatCountdown(w.expiresAtMs)}
                     </span>
                   </td>
-                  <td className="py-3 px-4">{w.planTier}</td>
                   <td className="py-3 px-4 text-right font-mono-tabular">{w.guestCount}</td>
                   <td className="py-3 px-4 text-right">
                     <button

@@ -214,7 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         <div className="mb-5">
-          <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A] mb-1">
+          <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A] mb-1">
             Private Wedding Community Access
           </div>
           <h2 className="font-display text-3xl font-semibold text-[#2A151B] dark:text-[#F5EDE2]">

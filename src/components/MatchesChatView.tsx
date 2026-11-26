@@ -205,7 +205,7 @@ export const MatchesChatView: React.FC<MatchesChatViewProps> = ({
     return (
       <div className="max-w-5xl mx-auto">
         <div className="mb-6">
-          <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+          <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
             Mutual Wedding Connections
           </div>
           <h2 className="font-display text-3xl font-semibold text-[#2A151B] dark:text-[#F5EDE2]">

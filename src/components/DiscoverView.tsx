@@ -177,7 +177,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
       {/* Header & Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
-          <div className="text-xs text-[#8F6A20] dark:text-[#D4AF5A] font-medium">
+          <div className="text-xs text-[#735312] dark:text-[#D4AF5A] font-medium">
             {activeWedding ? activeWedding.weddingName : 'Active Wedding Community'}
           </div>
           <h2 className="font-display text-3xl font-semibold text-[#2A151B] dark:text-[#F5EDE2]">
@@ -356,7 +356,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
                 type="button"
                 aria-label={copy.secretCrush}
                 onClick={() => triggerSwipe(topCard.profile, 'secret_crush')}
-                className="min-h-[48px] px-4 rounded-full bg-[#F3ECE2] dark:bg-[#2A151C] border border-[#C9A048]/60 text-[#8F6A20] dark:text-[#D4AF5A] text-xs font-medium inline-flex items-center gap-1.5 hover:bg-[#EAE0D1] transition-colors cursor-pointer"
+                className="min-h-[48px] px-4 rounded-full bg-[#F3ECE2] dark:bg-[#2A151C] border border-[#C9A048]/60 text-[#735312] dark:text-[#D4AF5A] text-xs font-medium inline-flex items-center gap-1.5 hover:bg-[#EAE0D1] transition-colors cursor-pointer"
                 title="Private interest unless mutual"
               >
                 <EyeOff className="w-4 h-4" />
@@ -390,7 +390,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
         <div className="lg:col-span-5 space-y-5">
           {dailyRecommendation && (
             <div className="p-5 rounded-2xl bg-white dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B]">
-              <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A] mb-2">
+              <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A] mb-2">
                 Daily Smart Match Recommendation
               </div>
               <div className="flex items-center gap-4">
@@ -424,7 +424,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
           )}
 
           <div className="p-5 rounded-2xl bg-white dark:bg-[#1E0F14] border border-[#E5D9C8] dark:border-[#3D222B]">
-            <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A] mb-1">
+            <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A] mb-1">
               Wedding Icebreaker Games
             </div>
             <p className="text-xs text-[#6E535B] dark:text-[#C7B3B8] mb-3">
@@ -478,7 +478,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
 
             <div className="p-6 space-y-4">
               <div>
-                <div className="text-xs font-medium text-[#8F6A20] dark:text-[#D4AF5A]">
+                <div className="text-xs font-medium text-[#735312] dark:text-[#D4AF5A]">
                   {detailCandidate.weddingSide} · {detailCandidate.intention}
                 </div>
                 <h3 className="font-display text-3xl font-semibold">
